@@ -3,92 +3,95 @@
 <head>
   <meta charset="UTF-8">
   <title>Sticky Notes</title>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Playpen+Sans:wght@400;500;600&display=swap");
+
+    * {
+      margin: 0;
+    }
+
+    #board {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      background-color: #cd995f;
+      overflow: hidden;
+      perspective: 1600px;
+      display: flex;
+      justify-content: end;
+      align-items: end;
+      box-sizing: border-box;
+      padding: 50px;
+    }
+
+    .stickynote {
+      position: absolute;
+      width: 200px;
+      height: auto;
+      min-height: 200px;
+      box-sizing: border-box;
+      padding: 10px;
+      transform: rotateX(5deg);
+      box-shadow: -1px 10px 5px -4px rgba(0, 0, 0, 0.012),
+        inset 0 24px 30px -12px rgba(0, 0, 0, 0.3);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: grab; /* Change cursor to grab */
+    }
+
+    .stickynote-text {
+      border-radius: 10px;
+      color: #373c49;
+      font-size: 18px;
+      font-weight: 600;
+      border: none;
+      background: transparent;
+      outline: none;
+      text-align: center;
+      resize: none;
+      overflow: hidden;
+      font-family: "Playpen Sans", cursive;
+      width: 100%;
+    }
+
+    .stickynote-text:focus {
+      background-color: rgba(0, 0, 0, 0.1);
+    }
+
+    .stickynote-text::placeholder {
+      color: black;
+      opacity: 30%;
+    }
+
+    #trash {
+      position: absolute;
+      fill: white;
+      width: 50px;
+      height: 50px;
+      left: 50px;
+      bottom: 50px;
+      padding: 32px;
+      background-color: #d90429;
+      border-radius: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.3);
+      cursor: pointer;
+    }
+
+    #reset {
+      position: absolute;
+      font-size: 18px;
+      font-family: sans-serif;
+      font-weight: bold;
+      color: white;
+      opacity: 0;
+      bottom: 14px;
+    }
+  </style>
 </head>
-<style>
-  @import url("https://fonts.googleapis.com/css2?family=Playpen+Sans:wght@400;500;600&display=swap");
-
-* {
-  margin: 0;
-}
-
-#board {
-  position: relative;
-  width: 100vw;
-  height: 100vh;
-  background-color: #cd995f;
-  overflow: hidden;
-  perspective: 1600px;
-  display: flex;
-  justify-content: end;
-  align-items: end;
-  box-sizing: border-box;
-  padding: 50px;
-}
-
-.stickynote {
-  position: absolute;
-  width: 200px;
-  height: 200px;
-  box-sizing: border-box;
-  padding: 10px;
-  transform: rotateX(5deg);
-  box-shadow: -1px 10px 5px -4px rgba(0, 0, 0, 0.012),
-    inset 0 24px 30px -12px rgba(0, 0, 0, 0.3);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.stickynote-text {
-  border-radius: 10px;
-  color: #373c49;
-  font-size: 18px;
-  font-weight: 600;
-  border: none;
-  background: transparent;
-  outline: none;
-  text-align: center;
-  resize: none;
-  overflow: hidden;
-  font-family: "Playpen Sans", cursive;
-}
-
-.stickynote-text:focus {
-  background-color: rgba(0, 0, 0, 0.1);
-}
-
-.stickynote-text::placeholder {
-  color: black;
-  opacity: 30%;
-}
-
-#trash {
-  position: absolute;
-  fill: white;
-  width: 50px;
-  height: 50px;
-  left: 50px;
-  bottom: 50px;
-  padding: 32px;
-  background-color: #d90429;
-  border-radius: 20px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.3);
-  cursor: pointer;
-}
-
-#reset {
-  position: absolute;
-  font-size: 18px;
-  font-family: sans-serif;
-  font-weight: bold;
-  color: white;
-  opacity: 0;
-  bottom: 14px;
-}
-</style>
 <body>
 <main id="board">
   <div id="trash">
@@ -129,6 +132,14 @@ function createSticky(color, textvalue = "", x = undefined, y = undefined) {
   }
 
   board.appendChild(sticky);
+
+  // Adjust textarea height to fit content
+  text.style.height = text.scrollHeight + 'px';
+  text.addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = (this.scrollHeight) + 'px';
+    saveBoardState();
+  });
 }
 
 function createStickies() {
@@ -148,6 +159,7 @@ function makeDraggable(sticky) {
 
   sticky.onmousedown = function(event) {
     sticky.style.zIndex = 1000;
+    sticky.style.cursor = "grabbing"; // Change cursor to grabbing while dragging
     offsetX = event.clientX - sticky.getBoundingClientRect().left;
     offsetY = event.clientY - sticky.getBoundingClientRect().top;
 
@@ -157,12 +169,13 @@ function makeDraggable(sticky) {
 
       sticky.style.left = `${x}px`;
       sticky.style.top = `${y}px`;
+      saveBoardState();
     }
 
     sticky.onmouseup = function() {
       document.onmousemove = null;
       sticky.onmouseup = null;
-
+      sticky.style.cursor = "grab"; // Change cursor back to grab when dragging ends
       sticky.style.zIndex = 1;
     }
   }
@@ -171,24 +184,4 @@ function makeDraggable(sticky) {
 function reset() {
   const stickies = document.querySelectorAll(".stickynote");
   stickies.forEach(sticky => {
-    board.removeChild(sticky);
-  });
-  createStickies();
-}
-
-trash.addEventListener("mouseenter", () => {
-  trash.style.transform = "scale(0.8) translateY(-10px)";
-  document.querySelector("#reset").style.opacity = 1;
-});
-
-trash.addEventListener("mouseleave", () => {
-  trash.style.transform = "scale(1) translateY(0)";
-  document.querySelector("#reset").style.opacity = 0;
-});
-
-trash.addEventListener("click", reset);
-
-createStickies();
-</script>
-</body>
-</html>
+    board.removeChild(st
